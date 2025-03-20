@@ -1,44 +1,41 @@
 pipeline {
     agent any
 
-    environment {
-        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
-        PATH = "/usr/lib/jvm/java-17-openjdk-amd64/bin:${env.PATH}"
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-repo.git'
+                echo 'Cloning repository...'
+                git 'https://github.com/Jagadeeshastragrown/travel.git'
             }
         }
 
         stage('Build') {
             steps {
-                sh './mvnw clean package'
+                echo 'Building Spring Boot application...'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
         stage('Test') {
             steps {
-                sh './mvnw test'
+                echo 'Running tests...'
+                sh 'mvn test'
             }
-        }
 
-        stage('Deploy') {
+        stage('Run Application') {
             steps {
-                echo 'Deploying application...'
-                // Add deployment steps here
+                echo 'Running Spring Boot application...'
+                sh 'nohup java -jar target/*.jar &'
             }
         }
     }
 
     post {
         success {
-            echo 'Pipeline executed successfully.'
+            echo 'Pipeline executed successfully!'
         }
         failure {
-            echo 'Pipeline failed.'
+            echo 'Pipeline failed!'
         }
     }
 }
