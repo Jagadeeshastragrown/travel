@@ -32,7 +32,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying application...'
-                bat 'java -jar target/*.jar &'
+                bat 'java -jar target/travel-jenkins-0.0.1-SNAPSHOT.jar'
             }
         }
 
