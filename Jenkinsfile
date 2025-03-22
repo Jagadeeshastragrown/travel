@@ -1,48 +1,49 @@
 pipeline {
     agent any
 
+    environment {
+        JAVA_HOME = "/usr/lib/jvm/java-11"
+        PATH = "/usr/lib/jvm/java-11/bin:${env.PATH}"
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
-                echo 'Cloning the repository...'
-                git 'https://github.com/Jagadeeshastragrown/travel.git'
+                echo 'Checking out the code...'
+                checkout scm
             }
         }
 
         stage('Build') {
             steps {
                 echo 'Building the application...'
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean package'
             }
         }
 
-        stage('Run Application') {
+        stage('Test') {
             steps {
-                echo 'Stopping any existing application...'
-
-                // Stop any process on port 8085
-                sh '''
-                PID=$(lsof -i :8085 -t) || true
-                if [ ! -z "$PID" ]; then
-                  echo "Stopping existing application (PID: $PID)"
-                  kill -9 $PID
-                fi
-                '''
-
-                echo 'Starting the application...'
-
-                // Run the new application
-                sh 'nohup java -jar target/*.jar > app.log 2>&1 &'
+                echo 'Running unit tests...'
+                sh 'mvn test'
             }
         }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying application...'
+                sh 'java -jar target/*.jar &'
+            }
+        }
+
     }
 
     post {
         success {
-            echo '✅ Application started successfully on port 8085!'
+            echo 'Pipeline executed successfully!'
         }
         failure {
-            echo '❌ Build or deployment failed.'
+            echo 'Pipeline failed!'
         }
     }
 }
