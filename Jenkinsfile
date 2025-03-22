@@ -1,10 +1,10 @@
 pipeline {
     agent any
 
-    environment {
-        JAVA_HOME = "/usr/lib/jvm/java-11"
-        PATH = "/usr/lib/jvm/java-11/bin:${env.PATH}"
-    }
+     environment {
+         JAVA_HOME = "C:\\Program Files\\Java\\jdk-17"
+         PATH = "${JAVA_HOME}\\bin;${env.PATH}"
+     }
 
     stages {
 
