@@ -33,10 +33,7 @@ pipeline {
             steps {
 
                 echo '🧪 Running springboot...'
-                bat '''
-                    start /b mvn spring-boot:run > output.log 2>&1
-                    timeout /t 20
-               '''
+                bat 'mvn spring-boot:run
 '
            }
         }
