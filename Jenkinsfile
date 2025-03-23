@@ -30,14 +30,23 @@ pipeline {
         }
 
        stage('Deploy') {
-         steps {
-             script {
-                def jarFile = bat(script: 'for /r target %i in (*.jar) do @echo %i', returnStdout: true).trim()
-                echo "Detected JAR: ${jarFile}"
-                bat "start java -jar ${jarFile}"
-            }
-          }
+           steps {
+               script {
+                   // Find the JAR file and handle % escaping correctly
+                   def jarFile = bat(script: 'for /r target %%i in (*.jar) do @echo %%i', returnStdout: true).trim()
+
+                   echo "Detected JAR: ${jarFile}"
+
+                   // Ensure jarFile is valid before attempting to run
+                   if (jarFile) {
+                       bat "start java -jar ${jarFile}"
+                   } else {
+                       error("JAR file not found in target directory!")
+                   }
+               }
+           }
        }
+
    }
 
     post {
