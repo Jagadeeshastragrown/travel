@@ -45,11 +45,19 @@ pipeline {
                 script {
                     echo '🔍 Waiting for Spring Boot to start...'
 
-                    // Wait for 30 seconds to allow Spring Boot to start
-                    sleep(time: 30, unit: 'SECONDS')
+                    // Allow time for Spring Boot to start
+                    sleep(time: 40, unit: 'SECONDS')
 
-                    // Correct Windows-compatible curl command
-                    def responseCode = bat(script: 'curl -s -o nul -w "%%{http_code}" http://localhost:8025/api/hello', returnStdout: true).trim()
+                    echo '🧾 Checking application health...'
+
+                    def response = bat(script: 'curl -s -o nul -w "%%{http_code}" http://localhost:8025/api/hello', returnStdout: true).trim()
+
+                    echo "👉 Raw curl output: ${response}"
+
+                    // Extract only the HTTP status code
+                    def responseCode = response.find(/\d{3}/)
+
+                    echo "👉 Extracted HTTP Status Code: ${responseCode}"
 
                     if (responseCode == '200') {
                         echo '✅ Application is running successfully!'
