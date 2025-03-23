@@ -33,18 +33,21 @@ pipeline {
 
 
                 echo 'Deploying new version...'
-                bat "start /B java -jar target\travel-jenkins-0.0.1-SNAPSHOT.jar --server.port=%APP_PORT% --server.address=0.0.0.0 > app.log 2>&1"
+                bat "start /B java -jar travel-jenkins-0.0.1-SNAPSHOT.jar --server.port=%APP_PORT% --server.address=0.0.0.0 > app.log 2>&1"
             }
         }
     }
 
-    post {
-        success {
-            echo 'Deployment successful!'
-            echo "Access your API at: http://<your-windows-ip>:%APP_PORT%/api/hello"
-        }
-        failure {
-            echo 'Deployment failed!'
-        }
-    }
-}
+      post {
+            success {
+                script {
+                    def ipAddress = powershell(returnStdout: true, script: "(Get-NetIPAddress -AddressFamily IPv4).IPAddress | Select-String -Pattern '^192|^10'").trim()
+                    echo 'Deployment successful!'
+                    echo "Access your API at: http://${ipAddress}:${APP_PORT}/api/hello"
+                }
+            }
+            failure {
+                echo 'Deployment failed!'
+            }
+      }
+   }
