@@ -1,10 +1,10 @@
 pipeline {
     agent any
 
-     environment {
-         JAVA_HOME = "C:\\Program Files\\Java\\jdk-17"
-         PATH = "${JAVA_HOME}\\bin;${env.PATH}"
-     }
+    environment {
+        JAVA_HOME = "C:\\Program Files\\Java\\jdk-17"
+        PATH = "${JAVA_HOME}\\bin;${env.PATH}"
+    }
 
     stages {
 
@@ -29,32 +29,34 @@ pipeline {
             }
         }
 
-       stage('Deploy') {
-           steps {
-               script {
-                   // Find the JAR file and handle % escaping correctly
-                   def jarFile = bat(script: 'for /r target %%i in (*.jar) do @echo %%i', returnStdout: true).trim()
+        stage('Deploy') {
+            steps {
+                script {
+                    // Find the first JAR file in the target directory
+                    def jarFile = bat(script: 'for /r target %%i in (*.jar) do @echo %%i & exit /b', returnStdout: true).trim()
 
-                   echo "Detected JAR: ${jarFile}"
+                    // Debug output to verify the correct JAR path
+                    echo "Detected JAR: ${jarFile}"
 
-                   // Ensure jarFile is valid before attempting to run
-                   if (jarFile) {
-                       bat "start java -jar ${jarFile}"
-                   } else {
-                       error("JAR file not found in target directory!")
-                   }
-               }
-           }
-       }
-
-   }
+                    // Ensure the JAR path is valid and exists
+                    if (jarFile && fileExists(jarFile)) {
+                        echo "Starting Spring Boot application..."
+                        // Run the Spring Boot application synchronously
+                        bat "java -jar \"${jarFile}\""
+                    } else {
+                        error("JAR file not found in target directory!")
+                    }
+                }
+            }
+        }
+    }
 
     post {
         success {
-            echo 'Pipeline executed successfully!'
+            echo '✅ Pipeline executed successfully!'
         }
         failure {
-            echo 'Pipeline failed!'
+            echo '❌ Pipeline failed!'
         }
     }
 }
