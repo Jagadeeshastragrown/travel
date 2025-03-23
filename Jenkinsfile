@@ -54,30 +54,15 @@ pipeline {
 
     post {
         always {
-            echo '📃 Pipeline execution completed.'
-
             script {
-                if (fileExists('output.log')) {
-                    echo '📝 Spring Boot Logs:'
-                    bat 'type output.log'
-                }
-
-                if (fileExists('pid.txt')) {
-                    def pid = readFile('pid.txt').trim().split("\n")[1]
-                    if (pid) {
-                        echo "🛑 Stopping Spring Boot process: ${pid}"
-                        bat "taskkill /PID ${pid} /F"
-                    }
+                def logs = sh(script: 'ls -l', returnStdout: true).trim().split("\n")
+                if (logs.size() > 1) {
+                    echo "First log: ${logs[1]}"
+                } else {
+                    echo "No logs available."
                 }
             }
         }
-
-        failure {
-            echo '❌ Pipeline failed! Check logs above.'
-        }
-
-        success {
-            echo '✅ Pipeline succeeded!'
-        }
     }
+
 }
