@@ -29,14 +29,15 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            steps {
-                echo 'Deploying application...'
-                bat 'java -jar target/travel-jenkins-0.0.1-SNAPSHOT.jar'
+    stage('Deploy') {
+        steps {
+            script {
+                def jarFile = bat(script: 'for /r target %i in (*.jar) do @echo %i', returnStdout: true).trim()
+                echo "Detected JAR: ${jarFile}"
+                bat "start java -jar ${jarFile}"
             }
         }
-
-    }
+   }
 
     post {
         success {
