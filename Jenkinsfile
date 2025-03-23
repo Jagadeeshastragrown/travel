@@ -36,7 +36,7 @@ pipeline {
             steps {
                 script {
                     echo '🔍 Waiting for Spring Boot to start...'
-                    sleep 60
+                    sleep 40
 
                     def response = bat(script: "curl -s -o nul -w \"%{http_code}\" http://localhost:${APP_PORT}${HEALTH_ENDPOINT}", returnStdout: true).trim()
 
@@ -56,8 +56,20 @@ pipeline {
         always {
             echo '📃 Pipeline execution completed.'
 
+            script {
+                if (fileExists('output.log')) {
+                    echo '📝 Spring Boot Logs:'
+                    bat 'type output.log'
+                }
 
-
+                if (fileExists('pid.txt')) {
+                    def pid = readFile('pid.txt').trim().split("\n")[1]
+                    if (pid) {
+                        echo "🛑 Stopping Spring Boot process: ${pid}"
+                        bat "taskkill /PID ${pid} /F"
+                    }
+                }
+            }
         }
 
         failure {
