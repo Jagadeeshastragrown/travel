@@ -7,7 +7,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 echo '📥 Checking out the code...'
@@ -40,23 +39,26 @@ pipeline {
                 '''
             }
         }
+
         stage('Check Application Status') {
-            script {
-                echo '🔍 Waiting for Spring Boot to start...'
+            steps {
+                script {
+                    echo '🔍 Waiting for Spring Boot to start...'
 
-                // Wait for 30 seconds to allow Spring Boot to start
-                sleep(time: 30, unit: 'SECONDS')
+                    // Wait for 30 seconds to allow Spring Boot to start
+                    sleep(time: 30, unit: 'SECONDS')
 
-                def responseCode = bat(script: 'curl -s -o /dev/null -w "%{http_code}" http://localhost:8025/api/hello', returnStdout: true).trim()
+                    // Correct Windows-compatible curl command
+                    def responseCode = bat(script: 'curl -s -o nul -w "%%{http_code}" http://localhost:8025/api/hello', returnStdout: true).trim()
 
-                if (responseCode == '200') {
-                    echo '✅ Application is running successfully!'
-                } else {
-                    error("❌ Application did not start properly. Response code: ${responseCode}")
+                    if (responseCode == '200') {
+                        echo '✅ Application is running successfully!'
+                    } else {
+                        error("❌ Application did not start properly. Response code: ${responseCode}")
+                    }
                 }
             }
         }
-
 
         stage('Stop Spring Boot') {
             steps {
@@ -64,9 +66,13 @@ pipeline {
 
                 script {
                     if (fileExists('pid.txt')) {
-                        def pid = readFile('pid.txt').trim().split('\n')[1]
-                        echo "Stopping Process ID: ${pid}"
-                        bat "taskkill /PID ${pid} /F"
+                        def pid = readFile('pid.txt').trim().split('\n').find { it.isInteger() }
+                        if (pid) {
+                            echo "Stopping Process ID: ${pid}"
+                            bat "taskkill /PID ${pid} /F"
+                        } else {
+                            echo "❌ PID not found in pid.txt. Spring Boot may not be running."
+                        }
                     } else {
                         echo "❌ PID file not found. Spring Boot may not be running."
                     }
