@@ -29,14 +29,15 @@ pipeline {
             }
         }
 
-    stage('Deploy') {
-        steps {
-            script {
+       stage('Deploy') {
+         steps {
+             script {
                 def jarFile = bat(script: 'for /r target %i in (*.jar) do @echo %i', returnStdout: true).trim()
                 echo "Detected JAR: ${jarFile}"
                 bat "start java -jar ${jarFile}"
             }
-        }
+          }
+       }
    }
 
     post {
