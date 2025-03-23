@@ -37,8 +37,8 @@ pipeline {
                     if (fileExists(jarFile)) {
                         echo "🚀 Starting Spring Boot application with: ${jarFile}"
 
-                        // Start Spring Boot app in the background (non-blocking)
-                        bat "start /b java -jar ${jarFile}"
+                        // Start Spring Boot app in the background and log output
+                        bat "start /b java -jar ${jarFile} > output.log 2>&1"
 
                         echo "✅ Application deployed successfully!"
                     } else {
@@ -50,6 +50,13 @@ pipeline {
     }
 
     post {
+        always {
+            echo '📝 Pipeline execution completed.'
+            script {
+                // Print the last 50 lines of the application log
+                bat 'type output.log'
+            }
+        }
         success {
             echo '✅ Pipeline executed successfully!'
         }
