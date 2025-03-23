@@ -37,10 +37,33 @@ pipeline {
                     if (fileExists(jarFile)) {
                         echo "🚀 Starting Spring Boot application with: ${jarFile}"
 
-                        // Start Spring Boot app in the background and log output
+                        // Start Spring Boot in the background
                         bat "start /b java -jar ${jarFile} > output.log 2>&1"
 
-                        echo "✅ Application deployed successfully!"
+                        echo "🕒 Waiting for Spring Boot to start..."
+
+                        // Wait and check the logs until Spring Boot is ready
+                        def maxAttempts = 30
+                        def attempt = 0
+                        def isRunning = false
+
+                        while (attempt < maxAttempts) {
+                            if (fileExists('output.log')) {
+                                def logContent = readFile('output.log')
+                                if (logContent.contains("Tomcat started on port")) {
+                                    echo "✅ Spring Boot is running successfully!"
+                                    isRunning = true
+                                    break
+                                }
+                            }
+                            sleep(time: 5, unit: 'SECONDS')
+                            attempt++
+                        }
+
+                        if (!isRunning) {
+                            error("❌ Spring Boot failed to start. Check output.log for details.")
+                        }
+
                     } else {
                         error("❌ JAR file not found: ${jarFile}")
                     }
@@ -53,8 +76,10 @@ pipeline {
         always {
             echo '📝 Pipeline execution completed.'
             script {
-                // Print the last 50 lines of the application log
-                bat 'type output.log'
+                // Display the last 100 lines of the log for debugging
+                if (fileExists('output.log')) {
+                    bat 'type output.log'
+                }
             }
         }
         success {
