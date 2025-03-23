@@ -33,8 +33,7 @@ pipeline {
             steps {
 
                 echo '🧪 Running springboot...'
-                bat 'mvn spring-boot:run
-'
+                bat 'mvn spring-boot:run'
            }
         }
         stage('Check Application Status') {
