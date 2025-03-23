@@ -30,10 +30,7 @@ pipeline {
 
         stage('Deploy to Server') {
             steps {
-                echo 'Stopping existing application...'
-                bat '''
-                for /f "tokens=5" %%a in ('netstat -aon ^| findstr :%APP_PORT%') do taskkill /PID %%a /F || echo No process found on port %APP_PORT%
-                '''
+
 
                 echo 'Deploying new version...'
                 bat "start /B java -jar target\\*.jar --server.port=%APP_PORT% --server.address=0.0.0.0 > app.log 2>&1"
