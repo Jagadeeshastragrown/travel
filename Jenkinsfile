@@ -70,6 +70,15 @@ pipeline {
                 }
             }
         }
+        stage('Check Application Status') {
+            steps {
+                script {
+                    def response = bat(returnStdout: true, script: 'curl http://localhost:8025/api/hello')
+                    echo "API Response: ${response}"
+                }
+            }
+        }
+
     }
 
     post {
