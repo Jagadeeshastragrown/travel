@@ -31,27 +31,48 @@ pipeline {
 
         stage('Deploy') {
             steps {
+                echo '🚀 Starting Spring Boot in the background...'
 
-                echo '🧪 Running springboot...'
-                bat 'mvn spring-boot:run'
-           }
+                // Start Spring Boot in the background and save the PID
+                bat '''
+                    start /b mvn spring-boot:run > output.log 2>&1
+                    wmic process where "commandline like '%%spring-boot%%'" get ProcessId > pid.txt
+                '''
+            }
         }
+
         stage('Check Application Status') {
             steps {
                 script {
+                    echo '🔍 Checking if Spring Boot is running...'
+                    sleep(time: 10, unit: 'SECONDS') // Wait for Spring Boot to start
                     def response = bat(returnStdout: true, script: 'curl http://localhost:8025/api/hello')
                     echo "API Response: ${response}"
                 }
             }
         }
 
+        stage('Stop Spring Boot') {
+            steps {
+                echo '🛑 Stopping Spring Boot application...'
+
+                script {
+                    if (fileExists('pid.txt')) {
+                        def pid = readFile('pid.txt').trim().split('\n')[1]
+                        echo "Stopping Process ID: ${pid}"
+                        bat "taskkill /PID ${pid} /F"
+                    } else {
+                        echo "❌ PID file not found. Spring Boot may not be running."
+                    }
+                }
+            }
+        }
     }
 
     post {
         always {
             echo '📝 Pipeline execution completed.'
             script {
-                // Display the last 100 lines of the log for debugging
                 if (fileExists('output.log')) {
                     bat 'type output.log'
                 }
