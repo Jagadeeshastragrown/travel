@@ -32,23 +32,19 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Find the first JAR file in the target directory
-                    def jarFile = bat(script: 'for /r target %%i in (*.jar) do @echo %%i & exit /b', returnStdout: true).trim()
+                    def jarFile = "target\\travel-jenkins-0.0.1-SNAPSHOT.jar"
 
-                    // Debug output to verify the correct JAR path
-                    echo "Detected JAR: ${jarFile}"
-
-                    // Ensure the JAR path is valid and exists
-                    if (jarFile && fileExists(jarFile)) {
-                        echo "Starting Spring Boot application..."
-                        // Run the Spring Boot application synchronously
-                        bat "java -jar \"${jarFile}\""
+                    // Ensure JAR exists before deploying
+                    if (fileExists(jarFile)) {
+                        echo "Starting Spring Boot application with: ${jarFile}"
+                        bat "java -jar ${jarFile}"
                     } else {
-                        error("JAR file not found in target directory!")
+                        error("JAR file not found: ${jarFile}")
                     }
                 }
             }
         }
+
     }
 
     post {
