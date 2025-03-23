@@ -40,39 +40,23 @@ pipeline {
                 '''
             }
         }
-
         stage('Check Application Status') {
-            steps {
-                script {
-                    echo '🔍 Waiting for Spring Boot to start...'
+            script {
+                echo '🔍 Waiting for Spring Boot to start...'
 
-                    def maxRetries = 5
-                    def retries = 0
-                    def appUp = false
+                // Wait for 30 seconds to allow Spring Boot to start
+                sleep(time: 30, unit: 'SECONDS')
 
-                    while (retries < maxRetries) {
-                        sleep(time: 15, unit: 'SECONDS') // Wait for the app to start
+                def responseCode = bat(script: 'curl -s -o /dev/null -w "%{http_code}" http://localhost:8025/api/hello', returnStdout: true).trim()
 
-                        def response = bat(returnStdout: true, script: 'curl -s -o /dev/null -w "%{http_code}" http://localhost:8025/api/hello').trim()
-
-                        echo "API Response Code: ${response}"
-
-                        if (response == '200') {
-                            echo '✅ Spring Boot is UP!'
-                            appUp = true
-                            break
-                        }
-
-                        retries++
-                        echo "Retrying... (${retries}/${maxRetries})"
-                    }
-
-                    if (!appUp) {
-                        error('❌ Spring Boot did not start successfully!')
-                    }
+                if (responseCode == '200') {
+                    echo '✅ Application is running successfully!'
+                } else {
+                    error("❌ Application did not start properly. Response code: ${responseCode}")
                 }
             }
         }
+
 
         stage('Stop Spring Boot') {
             steps {
