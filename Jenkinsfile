@@ -35,7 +35,7 @@ pipeline {
 
                 bat '''
                     start /b mvn spring-boot:run > output.log 2>&1
-                    timeout /T 5 /nobreak
+                    ping -n 5 127.0.0.1 > nul
                     wmic process where "commandline like '%%spring-boot%%'" get ProcessId > pid.txt
                 '''
             }
