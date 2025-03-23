@@ -33,9 +33,9 @@ pipeline {
             steps {
                 echo '🚀 Starting Spring Boot in the background...'
 
-                // Start Spring Boot in the background and save the PID
                 bat '''
                     start /b mvn spring-boot:run > output.log 2>&1
+                    timeout /T 5 /nobreak
                     wmic process where "commandline like '%%spring-boot%%'" get ProcessId > pid.txt
                 '''
             }
@@ -44,10 +44,32 @@ pipeline {
         stage('Check Application Status') {
             steps {
                 script {
-                    echo '🔍 Checking if Spring Boot is running...'
-                    sleep(time: 10, unit: 'SECONDS') // Wait for Spring Boot to start
-                    def response = bat(returnStdout: true, script: 'curl http://localhost:8025/api/hello')
-                    echo "API Response: ${response}"
+                    echo '🔍 Waiting for Spring Boot to start...'
+
+                    def maxRetries = 5
+                    def retries = 0
+                    def appUp = false
+
+                    while (retries < maxRetries) {
+                        sleep(time: 15, unit: 'SECONDS') // Wait for the app to start
+
+                        def response = bat(returnStdout: true, script: 'curl -s -o /dev/null -w "%{http_code}" http://localhost:8025/api/hello').trim()
+
+                        echo "API Response Code: ${response}"
+
+                        if (response == '200') {
+                            echo '✅ Spring Boot is UP!'
+                            appUp = true
+                            break
+                        }
+
+                        retries++
+                        echo "Retrying... (${retries}/${maxRetries})"
+                    }
+
+                    if (!appUp) {
+                        error('❌ Spring Boot did not start successfully!')
+                    }
                 }
             }
         }
@@ -82,7 +104,7 @@ pipeline {
             echo '✅ Pipeline executed successfully!'
         }
         failure {
-            echo '❌ Pipeline failed!'
+            echo '❌ Pipeline failed! Check logs above.'
         }
     }
 }
